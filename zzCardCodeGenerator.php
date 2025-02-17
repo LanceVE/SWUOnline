@@ -27,8 +27,13 @@
   $hasDestroyedArray = [];
   $setArray = [];
   $cardIDArray = [];
-  
-  $language = "FR";
+  $pos = 1;
+  $language = "EN";
+
+//TODO make a function that reads leader UUIDS and updates a file when new ones come
+//IF != english then we use the UUIDS in order
+
+
 
   while ($hasMoreData)
   {
@@ -77,18 +82,38 @@
 
       //$imageUrl = "https://swudb.com/cards/" . $set . "/" . $cardNumber . ".png";
 
-
       CheckImage($card->cardUid, $imageUrl, $language,  $definedType, set:$set);
       if($card->artBack->data != null) {
         $type2 = $card->type2->data == null ? "" : $card->type2->data->attributes->name;
         if($type2 == "Leader Unit" || $type2 == "Leader Unité" || $type2 = "Unidad Líder" || $type2 == "Anführer-Einheit" || $type2 = "Unità Leader") $definedType = "Unit"; 
         $imageUrl = $card->artBack->data->attributes->formats->card->url;
-        echo("$imageUrl");
-        echo("  ");
+        // echo("$imageUrl");
+        // echo("  ");
         $arr = explode("_", $imageUrl);
         $arr = explode(".", $arr[count($arr)-1]);
         $uuid = $arr[0];
-        CheckImage($uuid, $imageUrl, $language, $definedType, isBack:true, set:$set);
+        if ($language == "EN") {//Appends leaders to the end
+          $uidFile = "leaders.txt";
+          $uids = file($uidFile, FILE_IGNORE_NEW_LINES);
+          if (empty($uids)) {
+            addUidToFile($uuid);
+            echo("UID: " . $uuid . " ADDED TO LEADER FILE"); //English UIDS are different
+            echo("\n");
+          } else {
+            if (!in_array($uuid, $uids)) {
+              addUidToFile($uuid);
+              echo("UID: " . $uuid . " ADDED TO LEADER FILE"); //English UIDS are different
+              echo("\n");
+            }
+          }
+        }
+        if($language == "FR" || $language == "ES" || $language == "DE" || $language == "IT"){
+          echo("UUID" . "     " . getUuidAtLine($pos));
+          $uuid = getUuidAtLine($pos);
+          echo("\n");
+        }
+        CheckImage($uuid, $imageUrl, $language, $definedType, isBack:true, set:$set); //BackSide (Unit Side of Leader)
+        $pos++;
         AddToArrays($cardID, $uuid);
       }
     }
@@ -104,7 +129,7 @@
 
   if (!is_dir("./GeneratedCode")) mkdir("./GeneratedCode", 777, true);
 
-  if($language == "EN"){
+  if($language == "DEN"){//CHANGE TO EN WHEN DONE
     $generateFilename = "./GeneratedCode/GeneratedCardDictionaries.php";
     $handler = fopen($generateFilename, "w");
 
@@ -336,4 +361,27 @@
     }
   }
 
+function addUidToFile($uid) {
+  $filePath = 'leaders.txt';
+  $file = fopen($filePath, 'a');
+  fwrite($file, $uid . PHP_EOL);
+}
+
+function getUuidAtLine($lineNumber) {
+  $filePath = 'leaders.txt';
+  $file = fopen($filePath, 'r'); // Open the file in read mode
+  $currentLine = 0;
+  if (!$file) {
+      die('Failed to open the file');
+  }
+  while (($line = fgets($file)) !== false) {
+      $currentLine++;
+      if ($currentLine == $lineNumber) {
+          fclose($file);
+          return trim($line); 
+      }
+  }
+  fclose($file);
+  return null; 
+}
 ?>
