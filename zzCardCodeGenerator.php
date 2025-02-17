@@ -129,7 +129,7 @@
 
   if (!is_dir("./GeneratedCode")) mkdir("./GeneratedCode", 777, true);
 
-  if($language == "DEN"){//CHANGE TO EN WHEN DONE
+  if($language == "EN"){
     $generateFilename = "./GeneratedCode/GeneratedCardDictionaries.php";
     $handler = fopen($generateFilename, "w");
 
